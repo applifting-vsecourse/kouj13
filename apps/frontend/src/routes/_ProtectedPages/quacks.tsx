@@ -4,8 +4,8 @@ import { createFileRoute } from "@tanstack/react-router"
 import { Seo } from "@/components/Seo"
 
 import { quacksQueryOptions } from "@/features/quack/api/quacksQueryOptions"
+import { QuackFeed } from "@/features/quack/components/QuackFeed"
 import { QuackForm } from "@/features/quack/components/QuackForm"
-import { QuackList } from "@/features/quack/components/QuackList"
 
 export const Route = createFileRoute("/_ProtectedPages/quacks")({
   component: QuacksPage,
@@ -22,7 +22,7 @@ function QuacksPage() {
 
         <QuackForm className="mb-4" />
 
-        <QuackList
+        <QuackFeed
           quacks={quacksQuery.data ?? []}
           isLoading={quacksQuery.isLoading}
           error={quacksQuery.error ?? undefined}
