@@ -9,6 +9,7 @@ import { QuacksService } from './quacks.service';
 const aQuack = (overrides: Partial<Quack> = {}): Quack => ({
   id: 'q1',
   text: 'quack quack',
+  mood: null,
   userId: 'u1',
   createdAt: new Date('2026-01-01T12:00:00Z'),
   updatedAt: new Date('2026-01-01T12:00:00Z'),
@@ -42,6 +43,7 @@ describe('QuacksService', () => {
     // the author comes from the session, not from the caller's payload
     expect(repository.createQuack).toHaveBeenCalledWith({
       text: 'hello',
+      mood: null,
       userId: 'u1',
     });
   });

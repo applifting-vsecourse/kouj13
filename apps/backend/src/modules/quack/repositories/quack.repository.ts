@@ -3,7 +3,7 @@ import {
   Quack as PrismaQuack,
   User as PrismaUser,
 } from '@/generated/prisma/client';
-import { Quack } from '@/modules/quack/domain/quack';
+import { Quack, QuackMood } from '@/modules/quack/domain/quack';
 import { Injectable } from '@nestjs/common';
 
 const mapPrismaQuackToDomain = (
@@ -11,6 +11,7 @@ const mapPrismaQuackToDomain = (
 ): Quack => ({
   id: quack.id,
   text: quack.text,
+  mood: quack.mood,
   userId: quack.userId,
   createdAt: quack.createdAt,
   updatedAt: quack.updatedAt,
@@ -41,11 +42,13 @@ export class QuackRepository {
 
   async createQuack(createQuackData: {
     text: string;
+    mood?: QuackMood | null;
     userId: string;
   }): Promise<Quack> {
     const quack = await this.prisma.quack.create({
       data: {
         text: createQuackData.text,
+        mood: createQuackData.mood,
         user: { connect: { id: createQuackData.userId } },
       },
       include: { user: true },
