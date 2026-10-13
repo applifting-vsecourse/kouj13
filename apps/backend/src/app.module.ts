@@ -1,5 +1,6 @@
 import { ConfigModule } from '@applifting-io/nestjs-decorated-config';
 import { Module } from '@nestjs/common';
+import { ProfileModule } from './modules/profile/profile.module';
 import { QuackModule } from './modules/quack/quack.module';
 import { WelcomeModule } from './modules/welcome/welcome.module';
 import { AuthModule } from './shared/auth/auth.module';
@@ -10,6 +11,7 @@ const imports = [
   AuthModule,
   WelcomeModule,
   QuackModule,
+  ProfileModule,
 ];
 
 @Module({
