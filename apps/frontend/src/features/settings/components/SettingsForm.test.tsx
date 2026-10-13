@@ -57,6 +57,20 @@ beforeEach(() => {
 })
 
 describe("Settings", () => {
+  it("retains all edits and shows a general server error", async () => {
+    vi.mocked(updateProfile).mockRejectedValue(new Error("Server unavailable"))
+    const user = userEvent.setup()
+    renderForm()
+    await user.type(screen.getByLabelText("Display name"), " updated")
+    await user.type(screen.getByLabelText("Bio (optional)"), " updated")
+    await user.selectOptions(screen.getByLabelText("Default mood"), "sad")
+    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    expect(await screen.findByRole("alert")).toHaveTextContent("Server unavailable")
+    expect(screen.getByLabelText("Display name")).toHaveValue("Duck updated")
+    expect(screen.getByLabelText("Bio (optional)")).toHaveValue("Hello! updated")
+    expect(screen.getByLabelText("Default mood")).toHaveValue("sad")
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled()
+  })
   it("starts with saved values and discards all edits", async () => {
     const user = userEvent.setup()
     renderForm()

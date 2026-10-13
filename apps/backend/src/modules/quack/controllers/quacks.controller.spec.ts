@@ -47,7 +47,7 @@ describe('Quack moods', () => {
         mood,
         userId: 'u1',
       });
-      await expect(controller.list()).resolves.toEqual([
+      await expect(controller.list({ id: 'u1' } as Identity)).resolves.toEqual([
         expect.objectContaining({ mood }),
       ]);
     },

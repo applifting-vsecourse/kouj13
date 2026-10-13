@@ -57,7 +57,7 @@ describe("QuackList", () => {
     expect(screen.getByText("Couldn't load quacks")).toBeInTheDocument()
     expect(screen.getByText("Server unreachable")).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole("button", { name: /reload/i }))
+    await userEvent.click(screen.getByRole("button", { name: /retry/i }))
     expect(onReload).toHaveBeenCalledOnce()
   })
 })

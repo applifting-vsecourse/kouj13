@@ -1,8 +1,10 @@
 import { PrismaService } from '@/core/prisma/prisma.service';
 import {
+  Prisma,
   Quack as PrismaQuack,
   User as PrismaUser,
 } from '@/generated/prisma/client';
+import { readPolls } from '@/modules/poll/repositories/poll.repository';
 import { Quack, QuackMood } from '@/modules/quack/domain/quack';
 import { Injectable } from '@nestjs/common';
 
@@ -32,27 +34,61 @@ const mapPrismaQuackToDomain = (
 export class QuackRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getQuacks(): Promise<Quack[]> {
-    const quacks = await this.prisma.quack.findMany({
-      include: { user: true },
-      orderBy: { createdAt: 'desc' },
-    });
-    return quacks.map(mapPrismaQuackToDomain);
+  async getQuacks(userId: string): Promise<Quack[]> {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const quacks = await tx.quack.findMany({
+          include: { user: true, poll: true },
+          orderBy: { createdAt: 'desc' },
+        });
+        const polls = await readPolls(
+          tx,
+          quacks.flatMap((quack) => (quack.poll ? [quack.poll.id] : [])),
+          userId,
+        );
+        return quacks.map((quack) => ({
+          ...mapPrismaQuackToDomain(quack),
+          poll: polls.find((poll) => poll.id === quack.poll?.id) ?? null,
+        }));
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   }
 
   async createQuack(createQuackData: {
     text: string;
     mood?: QuackMood | null;
     userId: string;
+    poll?: { options: string[] };
   }): Promise<Quack> {
-    const quack = await this.prisma.quack.create({
-      data: {
-        text: createQuackData.text,
-        mood: createQuackData.mood,
-        user: { connect: { id: createQuackData.userId } },
-      },
-      include: { user: true },
+    return this.prisma.$transaction(async (tx) => {
+      const quack = await tx.quack.create({
+        data: {
+          text: createQuackData.text,
+          mood: createQuackData.mood,
+          user: { connect: { id: createQuackData.userId } },
+          ...(createQuackData.poll
+            ? {
+                poll: {
+                  create: {
+                    options: {
+                      create: createQuackData.poll.options.map(
+                        (label, position) => ({ label, position }),
+                      ),
+                    },
+                  },
+                },
+              }
+            : {}),
+        },
+        include: { user: true, poll: true },
+      });
+      const [poll] = await readPolls(
+        tx,
+        quack.poll ? [quack.poll.id] : [],
+        createQuackData.userId,
+      );
+      return { ...mapPrismaQuackToDomain(quack), poll: poll ?? null };
     });
-    return mapPrismaQuackToDomain(quack);
   }
 }

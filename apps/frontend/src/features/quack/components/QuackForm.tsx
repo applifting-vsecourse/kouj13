@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
-import { useForm, useWatch } from "react-hook-form"
+import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -14,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
@@ -32,6 +33,34 @@ const schema = z.object({
     .min(1, "Write something first")
     .max(MAX_LENGTH, `Keep it under ${MAX_LENGTH} characters`),
   mood: z.union([z.literal(""), quackMoodSchema]),
+  options: z
+    .array(
+      z.object({
+        label: z
+          .string()
+          .trim()
+          .min(1, "Write an answer")
+          .max(80, "Keep answers to 80 characters or fewer"),
+      }),
+    )
+    .max(6)
+    .superRefine((options, context) => {
+      if (options.length === 1) {
+        context.addIssue({ code: "custom", message: "Add at least two answers" })
+      }
+      const seen = new Set<string>()
+      options.forEach((option, index) => {
+        const label = option.label.toLowerCase()
+        if (seen.has(label)) {
+          context.addIssue({
+            code: "custom",
+            path: [index, "label"],
+            message: "Use a different answer",
+          })
+        }
+        seen.add(label)
+      })
+    }),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -42,8 +71,9 @@ export function QuackForm({ className, defaultMood = null }: QuackFormProps) {
   const addQuack = useAddQuack()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { text: "", mood: defaultMood ?? "" },
+    defaultValues: { text: "", mood: defaultMood ?? "", options: [] },
   })
+  const answers = useFieldArray({ control: form.control, name: "options" })
 
   useEffect(() => {
     if (!form.getFieldState("mood").isDirty) {
@@ -56,8 +86,14 @@ export function QuackForm({ className, defaultMood = null }: QuackFormProps) {
 
   const handleSubmit = (values: FormValues) => {
     addQuack.mutate(
-      { text: values.text, ...(values.mood ? { mood: values.mood } : {}) },
-      { onSuccess: () => form.reset({ text: "", mood: defaultMood ?? "" }) },
+      {
+        text: values.text,
+        ...(values.mood ? { mood: values.mood } : {}),
+        ...(values.options.length
+          ? { poll: { options: values.options.map((option) => option.label) } }
+          : {}),
+      },
+      { onSuccess: () => form.reset({ text: "", mood: defaultMood ?? "", options: [] }) },
     )
   }
 
@@ -121,6 +157,74 @@ export function QuackForm({ className, defaultMood = null }: QuackFormProps) {
           />
         </div>
 
+        {answers.fields.length ? (
+          <fieldset
+            disabled={addQuack.isPending}
+            className="space-y-3 border-t border-border pt-4"
+          >
+            <legend className="text-sm font-medium">Poll answers</legend>
+            <p className="text-sm text-muted-foreground">
+              Your post is the question. Choose 2–6 fixed answers.
+            </p>
+            {answers.fields.map((answer, index) => (
+              <div
+                key={answer.id}
+                className="flex items-start gap-3"
+              >
+                <FormField
+                  control={form.control}
+                  name={`options.${index}.label`}
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Answer {index + 1}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="mt-6"
+                  disabled={answers.fields.length <= 2}
+                  aria-label={`Remove answer ${index + 1}`}
+                  onClick={() => answers.remove(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={answers.fields.length >= 6}
+                onClick={() => answers.append({ label: "" })}
+              >
+                Add answer
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => answers.replace([])}
+              >
+                Remove poll
+              </Button>
+            </div>
+          </fieldset>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={addQuack.isPending}
+            onClick={() => answers.append([{ label: "" }, { label: "" }])}
+          >
+            Add poll
+          </Button>
+        )}
+
         <div className="flex items-center justify-end gap-3">
           <span
             className={cn(
@@ -136,7 +240,7 @@ export function QuackForm({ className, defaultMood = null }: QuackFormProps) {
             disabled={addQuack.isPending}
           >
             {addQuack.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Quack
+            {addQuack.isPending ? "Posting…" : "Quack"}
           </Button>
         </div>
       </form>

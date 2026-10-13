@@ -1,3 +1,5 @@
+import { Poll } from '@/modules/poll/domain/poll';
+
 export const QUACK_MOODS = ['happy', 'sad', 'angry', 'silly'] as const;
 export type QuackMood = (typeof QUACK_MOODS)[number];
 
@@ -15,4 +17,5 @@ export type Quack = {
   createdAt: Date;
   updatedAt: Date;
   user?: QuackAuthor;
+  poll?: Poll | null;
 };
