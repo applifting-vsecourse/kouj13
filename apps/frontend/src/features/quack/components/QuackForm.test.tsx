@@ -8,11 +8,11 @@ import { QuackForm } from "@/features/quack/components/QuackForm"
 
 vi.mock("@/features/quack/api/addQuack", () => ({ addQuack: vi.fn() }))
 
-function renderForm() {
+function renderForm(defaultMood?: "happy" | "sad" | "angry" | "silly") {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <QuackForm />
+      <QuackForm defaultMood={defaultMood} />
     </QueryClientProvider>,
   )
 }
@@ -30,6 +30,21 @@ beforeEach(() => {
 })
 
 describe("QuackForm moods", () => {
+  it.each(["happy", "sad", "angry", "silly"] as const)(
+    "starts and resets new posts with the saved %s mood",
+    async (mood) => {
+      const user = userEvent.setup()
+      renderForm(mood)
+      const select = screen.getByRole("combobox", { name: "Mood (optional)" })
+      expect(select).toHaveValue(mood)
+      await user.type(screen.getByRole("textbox", { name: "New quack" }), "hello")
+      await user.selectOptions(select, "")
+      await user.click(screen.getByRole("button", { name: "Quack" }))
+      await waitFor(() => expect(addQuack).toHaveBeenCalledOnce())
+      expect(vi.mocked(addQuack).mock.calls[0]?.[0]).toEqual({ text: "hello" })
+      await waitFor(() => expect(select).toHaveValue(mood))
+    },
+  )
   it.each(["happy", "sad", "angry", "silly"])(
     "submits the selected %s mood and resets it after success",
     async (mood) => {

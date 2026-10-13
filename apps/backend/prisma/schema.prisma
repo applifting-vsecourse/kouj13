@@ -107,6 +107,8 @@ model User {
 
   username        String? @db.VarChar(50)
   displayUsername String? @db.VarChar(50)
+  bio             String @default("") @db.VarChar(160)
+  defaultMood     QuackMood?
 
   @@unique([email])
   @@unique([username])

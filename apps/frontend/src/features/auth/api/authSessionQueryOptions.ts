@@ -1,20 +1,12 @@
 import { queryOptions } from "@tanstack/react-query"
 
 import { authKeys } from "@/lib/auth-keys"
+import { getProfile } from "@/lib/profile"
+import { type Session } from "@/lib/session"
 
 import { authClient } from "@/features/auth/lib/auth-client"
 
-export type SessionUser = {
-  id: string
-  email: string
-  name: string
-  username: string
-  role?: string
-}
-
-export type Session = {
-  user: SessionUser
-} | null
+export type { Session, SessionUser } from "@/lib/session"
 
 export const authSessionQueryOptions = () =>
   queryOptions({
@@ -23,6 +15,7 @@ export const authSessionQueryOptions = () =>
       const { data, error } = await authClient.getSession()
       if (error) throw new Error(error.message ?? "Failed to load session")
       if (!data?.user) return null
+      const profile = await getProfile()
 
       const user = data.user as typeof data.user & {
         username?: string | null
@@ -31,11 +24,9 @@ export const authSessionQueryOptions = () =>
 
       return {
         user: {
-          id: user.id,
           email: user.email,
-          name: user.name,
-          username: user.username ?? "",
           role: user.role ?? undefined,
+          ...profile,
         },
       }
     },
