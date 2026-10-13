@@ -25,7 +25,9 @@ describe('QuacksService', () => {
 
     const service = new QuacksService(repository);
 
-    await expect(service.getQuacks()).resolves.toEqual(quacks);
+    await expect(service.getQuacks({ id: 'u1' } as Identity)).resolves.toEqual(
+      quacks,
+    );
     expect(repository.getQuacks).toHaveBeenCalledTimes(1);
   });
 

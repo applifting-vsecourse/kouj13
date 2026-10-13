@@ -49,6 +49,7 @@ Verification/reset emails are printed to the backend terminal (console mailer) u
 ```shell
 pnpm check-all                     # lint + type-check + tests + builds (what CI runs)
 pnpm backend test                  # backend unit tests (jest)
+pnpm backend test:postgres         # isolated real-PostgreSQL poll/API tests (local Docker DB required)
 pnpm frontend test:ci              # frontend component tests (vitest)
 pnpm backend prisma:migrations:run # create + apply a migration after schema changes
 pnpm backend prisma:studio         # browse/edit the database

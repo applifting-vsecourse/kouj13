@@ -24,7 +24,11 @@ export function QuackList({
   return (
     <div className="flex flex-col">
       {isLoading && quacks.length === 0 ? (
-        <div className="flex items-center justify-center py-8 text-muted-foreground">
+        <div
+          role="status"
+          aria-label="Loading quacks"
+          className="flex items-center justify-center py-8 text-muted-foreground"
+        >
           <Loader2 className="size-5 animate-spin" />
         </div>
       ) : null}
@@ -34,7 +38,9 @@ export function QuackList({
           variant="destructive"
           className="mb-4"
         >
-          <AlertTitle>Couldn&apos;t load quacks</AlertTitle>
+          <AlertTitle>
+            {quacks.length ? "Results may be outdated" : "Couldn't load quacks"}
+          </AlertTitle>
           <AlertDescription className="flex items-center justify-between gap-3">
             <span>{error.message}</span>
             {onReload ? (
@@ -44,7 +50,7 @@ export function QuackList({
                 onClick={onReload}
               >
                 <RefreshCw className="size-4" />
-                Reload
+                Retry
               </Button>
             ) : null}
           </AlertDescription>

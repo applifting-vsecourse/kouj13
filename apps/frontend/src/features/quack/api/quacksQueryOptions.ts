@@ -9,4 +9,8 @@ export const quacksQueryOptions = () =>
   queryOptions({
     queryKey: quackKeys.lists(),
     queryFn: async () => quacksSchema.parse(await api.get("quacks").json()),
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
   })
