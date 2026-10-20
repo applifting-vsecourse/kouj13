@@ -3,6 +3,7 @@
 import { Quack } from '@/modules/quack/domain/quack';
 import { QuackRepository } from '@/modules/quack/repositories/quack.repository';
 import { Identity } from '@/shared/auth/domain/identity';
+import { NotFoundException } from '@nestjs/common';
 import { mock } from 'jest-mock-extended';
 import { QuacksService } from './quacks.service';
 
@@ -18,6 +19,27 @@ const aQuack = (overrides: Partial<Quack> = {}): Quack => ({
 });
 
 describe('QuacksService', () => {
+  it('deletes using the signed-in author identity', async () => {
+    const repository = mock<QuackRepository>();
+    repository.deleteQuack.mockResolvedValue(true);
+    const service = new QuacksService(repository);
+
+    await expect(
+      service.deleteQuack({ id: 'u1' } as Identity, 'q1'),
+    ).resolves.toBeUndefined();
+    expect(repository.deleteQuack).toHaveBeenCalledWith('q1', 'u1');
+  });
+
+  it('rejects deletion of missing quacks and quacks belonging to someone else', async () => {
+    const repository = mock<QuackRepository>();
+    repository.deleteQuack.mockResolvedValue(false);
+    const service = new QuacksService(repository);
+
+    await expect(
+      service.deleteQuack({ id: 'u2' } as Identity, 'q1'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(repository.deleteQuack).toHaveBeenCalledWith('q1', 'u2');
+  });
   it('returns quacks from the repository', async () => {
     const quacks = [aQuack()];
     const repository = mock<QuackRepository>();

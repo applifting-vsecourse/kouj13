@@ -2,13 +2,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { formatDate } from "@/lib/date"
 
 import { quackMoodLabels, type Quack } from "@/features/quack/api/quackSchemas"
+import { DeleteQuack } from "@/features/quack/components/DeleteQuack"
 import { PollVote } from "@/features/quack/components/PollVote"
 import { UsersName } from "@/features/quack/components/UsersName"
 import { UsersUserName } from "@/features/quack/components/UsersUserName"
 
-type QuackItemProps = { quack: Quack }
+type QuackItemProps = { quack: Quack; currentUserId?: string }
 
-export function QuackItem({ quack }: QuackItemProps) {
+export function QuackItem({ quack, currentUserId }: QuackItemProps) {
   const { name, username } = quack.user
 
   const initials = name
@@ -36,6 +37,7 @@ export function QuackItem({ quack }: QuackItemProps) {
               Mood: {quackMoodLabels[quack.mood]}
             </span>
           ) : null}
+          {currentUserId === quack.userId ? <DeleteQuack id={quack.id} /> : null}
         </div>
         <p className="text-sm break-words whitespace-pre-line">{quack.text}</p>
         {quack.poll ? (

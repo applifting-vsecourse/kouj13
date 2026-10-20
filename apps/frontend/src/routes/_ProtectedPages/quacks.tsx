@@ -1,3 +1,4 @@
+import { useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_ProtectedPages/quacks")({
 function QuacksPage() {
   const quacksQuery = useQuery(quacksQueryOptions())
   const { user } = useSession()
+  const textRef = useRef<HTMLTextAreaElement>(null)
 
   return (
     <>
@@ -23,11 +25,14 @@ function QuacksPage() {
         <h1 className="mb-4 text-2xl font-semibold tracking-tight">Quacks</h1>
 
         <QuackForm
+          textRef={textRef}
           className="mb-4"
           defaultMood={user?.defaultMood}
         />
 
         <QuackFeed
+          currentUserId={user?.id}
+          onWriteFirst={() => textRef.current?.focus()}
           quacks={quacksQuery.data ?? []}
           isLoading={quacksQuery.isLoading}
           error={quacksQuery.error ?? undefined}

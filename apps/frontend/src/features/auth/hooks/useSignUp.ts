@@ -22,6 +22,7 @@ export function useSignUp() {
         username: input.username,
         email: input.email,
         password: input.password,
+        callbackURL: `${window.location.origin}/quacks`,
       })
       if (error) throw new Error(error.message ?? "Sign up failed")
     },

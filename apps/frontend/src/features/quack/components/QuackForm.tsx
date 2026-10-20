@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, type Ref } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
@@ -65,9 +65,13 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-type QuackFormProps = { className?: string; defaultMood?: QuackMood | null }
+type QuackFormProps = {
+  className?: string
+  defaultMood?: QuackMood | null
+  textRef?: Ref<HTMLTextAreaElement>
+}
 
-export function QuackForm({ className, defaultMood = null }: QuackFormProps) {
+export function QuackForm({ className, defaultMood = null, textRef }: QuackFormProps) {
   const addQuack = useAddQuack()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -123,6 +127,11 @@ export function QuackForm({ className, defaultMood = null }: QuackFormProps) {
                     placeholder="Quack something..."
                     disabled={addQuack.isPending}
                     {...field}
+                    ref={(element) => {
+                      field.ref(element)
+                      if (typeof textRef === "function") textRef(element)
+                      else if (textRef) textRef.current = element
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
