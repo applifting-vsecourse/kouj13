@@ -12,6 +12,8 @@ type QuackListProps = {
   error?: Error
   onReload?: () => void
   emptyMessage?: string
+  currentUserId?: string
+  onWriteFirst?: () => void
 }
 
 export function QuackList({
@@ -20,6 +22,8 @@ export function QuackList({
   error,
   onReload,
   emptyMessage = "No quacks yet",
+  currentUserId,
+  onWriteFirst,
 }: QuackListProps) {
   return (
     <div className="flex flex-col">
@@ -58,13 +62,25 @@ export function QuackList({
       ) : null}
 
       {!isLoading && !error && quacks.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</p>
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          <p>{emptyMessage}</p>
+          {onWriteFirst ? (
+            <Button
+              variant="outline"
+              className="mt-3"
+              onClick={onWriteFirst}
+            >
+              Write your first quack
+            </Button>
+          ) : null}
+        </div>
       ) : null}
 
       {quacks.map((quack) => (
         <QuackItem
           key={quack.id}
           quack={quack}
+          currentUserId={currentUserId}
         />
       ))}
     </div>

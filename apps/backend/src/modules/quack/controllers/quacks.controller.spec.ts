@@ -2,7 +2,19 @@ import { Quack } from '@/modules/quack/domain/quack';
 import { QuackRepository } from '@/modules/quack/repositories/quack.repository';
 import { QuacksService } from '@/modules/quack/services/quacks.service';
 import { Identity } from '@/shared/auth/domain/identity';
-import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { AuthenticatedUserGuard } from '@/shared/auth/guards/authenticated-user.guard';
+import {
+  BadRequestException,
+  NotFoundException,
+  RequestMethod,
+  ValidationPipe,
+} from '@nestjs/common';
+import {
+  GUARDS_METADATA,
+  HTTP_CODE_METADATA,
+  METHOD_METADATA,
+  PATH_METADATA,
+} from '@nestjs/common/constants';
 import { mock } from 'jest-mock-extended';
 import { CreateQuackDto } from './dto/create-quack.dto';
 import { QuacksController } from './quacks.controller';
@@ -21,6 +33,34 @@ const validateBody = (body: unknown): Promise<CreateQuackDto> =>
   pipe.transform(body, { type: 'body', metatype: CreateQuackDto });
 
 describe('Quack moods', () => {
+  it('protects the feed and DELETE /quacks/:id with authentication and returns 204', async () => {
+    expect(Reflect.getMetadata(GUARDS_METADATA, QuacksController)).toContain(
+      AuthenticatedUserGuard,
+    );
+    expect(
+      Reflect.getMetadata(PATH_METADATA, QuacksController.prototype.delete),
+    ).toBe(':id');
+    expect(
+      Reflect.getMetadata(METHOD_METADATA, QuacksController.prototype.delete),
+    ).toBe(RequestMethod.DELETE);
+    expect(
+      Reflect.getMetadata(
+        HTTP_CODE_METADATA,
+        QuacksController.prototype.delete,
+      ),
+    ).toBe(204);
+    const repository = mock<QuackRepository>();
+    repository.deleteQuack.mockResolvedValue(true);
+    const controller = new QuacksController(new QuacksService(repository));
+    await expect(
+      controller.delete({ id: 'u1' } as Identity, 'q1'),
+    ).resolves.toBeUndefined();
+    expect(repository.deleteQuack).toHaveBeenCalledWith('q1', 'u1');
+    repository.deleteQuack.mockResolvedValue(false);
+    await expect(
+      controller.delete({ id: 'u2' } as Identity, 'q1'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
   it.each(['happy', 'sad', 'angry', 'silly'] as const)(
     'passes %s from the validated request to storage and feed responses',
     async (mood) => {

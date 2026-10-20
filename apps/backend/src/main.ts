@@ -41,7 +41,6 @@ async function main(): Promise<void> {
     .setTitle(config.name)
     .setDescription(config.description)
     .setVersion(config.version)
-    .addServer('/api')
     .addCookieAuth('better-auth.session_token')
     .build();
 
