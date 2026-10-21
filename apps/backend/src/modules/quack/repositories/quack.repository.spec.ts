@@ -3,6 +3,17 @@ import { mockDeep } from 'jest-mock-extended';
 import { QuackRepository } from './quack.repository';
 
 describe('QuackRepository deletion', () => {
+  it('deletes by id without author restriction for the admin scope', async () => {
+    const prisma = mockDeep<PrismaService>();
+    prisma.quack.deleteMany.mockResolvedValue({ count: 1 });
+    await expect(
+      new QuackRepository(prisma).deleteQuack('q1', undefined),
+    ).resolves.toBe(true);
+    expect(prisma.quack.deleteMany).toHaveBeenCalledWith({
+      where: { id: 'q1' },
+    });
+  });
+
   it.each([0, 1])(
     'requires both the quack id and session author in the delete (%s matches)',
     async (count) => {

@@ -18,6 +18,10 @@ The worked example is the quack feed: `Quack` model → seed → repository → 
 
 ## Conventions
 
+### Git is read-only
+
+Never stage changes, commit, or push to this repository. Use only read-only Git commands such as `git status`, `git diff`, `git log`, and `git show`. Do not run Git commands that modify the index, repository history, working tree, or remotes.
+
 Per-user uniqueness must be enforced by a database constraint. Optimistic UI must distinguish pending state from confirmed state, reconcile failed or uncertain writes, and refresh authoritative server data.
 
 Deliberately sparse — this file grows as the team learns what it expects from generated code. Add rules here when you find yourself repeating the same review feedback.

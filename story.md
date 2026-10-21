@@ -1,24 +1,37 @@
-# Basic quack search
+# Admin moderation: delete any quack
 
-## User story
+As an admin, I want to delete any quack so that I can remove abusive posts when their author refuses to delete them.
 
-As a reader who remembers a word from a quack or who wrote it, I want to search by quack text or author name, so that I can find a post I saw previously.
+## Decisions
+
+- The existing `admin` role is the moderator role. Review with the seeded `admin@example.com` / `adminpassword` account.
+- Reuse permanent deletion, its confirmation dialog, and the existing cascade deletion of poll data and votes.
+- Preserve the existing 404 response for missing quacks and unauthorized regular users. Hide Delete on other authors' posts from regular users.
 
 ## Acceptance criteria
 
-1. **Search control:** The quack feed has a text field labelled “Search quacks”. Pressing Enter submits the search.
-2. **Matching posts:** After submitting a non-empty search, the feed shows only quacks whose text or author’s displayed name contains the entered text. Posts matching either are included.
-3. **Case and whitespace:** Searching for `hello`, `HELLO`, or `hello` produces the same results.
-4. **No matches:** When no quacks match, the page displays “No quacks found” and keeps the search field available so the reader can try again.
-5. **Clear search:** Clearing the field and pressing Enter restores the normal feed. Submitting only spaces also shows the normal feed.
-6. **Empty feed:** If there are no quacks at all and no search is active, the page displays “No quacks yet”.
+1. An authenticated author can still delete their own quack.
+2. Another regular user cannot delete it, including through a direct API request; the quack remains intact.
+3. An authenticated admin can delete any quack, including another admin's, using the same endpoint and confirmation flow.
+4. The server derives permissions from the authenticated session. A supplied role or author cannot grant permission.
+5. Delete is visible on all posts for admins and only on own posts for regular users. Cancel makes no change; confirmed deletion refreshes the feed.
+6. Successful deletion returns 204; missing or forbidden deletion returns 404; signed-out deletion returns 401.
+7. Swagger documents the author-or-admin permission.
 
 ## Out of scope
 
-- Advanced filters or separate author search controls.
-- Autocomplete and search suggestions.
-- Typo correction, fuzzy matching, or relevance ranking.
-- Searching comments or other content.
-- Search analytics or usage dashboards.
+New roles, account management, editing others' posts, moderation queues, reporting, bans, and audit logs.
 
-Search results use the normal feed order. This first version uses one search field and simple text matching.
+## Review checklist
+
+- [x] Existing author deletion baseline: 18 backend tests and 48 frontend tests passed before changes.
+- [x] Author: own Delete visible; cancellation preserves the quack; confirmed deletion removes it.
+- [x] Other regular user: Delete hidden; direct DELETE rejected and post retained.
+- [x] Admin: Delete visible on others' posts; confirmation removes the post.
+- [x] Swagger: documented endpoint and authenticated DELETE checked.
+- [x] E2E: three real accounts and real PostgreSQL; deliberately broken authorization makes the test fail; restore and pass.
+- [x] Full repository checks pass (`pnpm check-all`: 46 backend tests, 49 frontend tests, lint, types, builds, formatting).
+
+## Mutation evidence
+
+Temporarily changed the service authorization to give both `user` and `admin` unrestricted deletion. `pnpm test:e2e` failed at the direct DELETE assertion: “A regular user cannot bypass the hidden Delete button” (expected 404, received 204). Restored the author-or-admin check before final verification.

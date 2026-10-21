@@ -39,7 +39,7 @@ export function DeleteQuack({ id }: { id: string }) {
         <DialogHeader>
           <DialogTitle>Delete this quack?</DialogTitle>
           <DialogDescription>
-            This permanently deletes your quack and any poll votes.
+            This permanently deletes this quack and any poll votes.
           </DialogDescription>
         </DialogHeader>
         {deletion.error ? (
@@ -47,7 +47,7 @@ export function DeleteQuack({ id }: { id: string }) {
             role="alert"
             className="text-sm text-destructive"
           >
-            Couldn&apos;t delete your quack. Please try again.
+            Couldn&apos;t delete this quack. Please try again.
           </p>
         ) : null}
         <DialogFooter>

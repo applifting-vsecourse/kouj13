@@ -13,6 +13,7 @@ type QuackListProps = {
   onReload?: () => void
   emptyMessage?: string
   currentUserId?: string
+  currentUserRole?: string
   onWriteFirst?: () => void
 }
 
@@ -23,6 +24,7 @@ export function QuackList({
   onReload,
   emptyMessage = "No quacks yet",
   currentUserId,
+  currentUserRole,
   onWriteFirst,
 }: QuackListProps) {
   return (
@@ -81,6 +83,7 @@ export function QuackList({
           key={quack.id}
           quack={quack}
           currentUserId={currentUserId}
+          currentUserRole={currentUserRole}
         />
       ))}
     </div>

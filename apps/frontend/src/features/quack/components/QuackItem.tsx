@@ -7,9 +7,9 @@ import { PollVote } from "@/features/quack/components/PollVote"
 import { UsersName } from "@/features/quack/components/UsersName"
 import { UsersUserName } from "@/features/quack/components/UsersUserName"
 
-type QuackItemProps = { quack: Quack; currentUserId?: string }
+type QuackItemProps = { quack: Quack; currentUserId?: string; currentUserRole?: string }
 
-export function QuackItem({ quack, currentUserId }: QuackItemProps) {
+export function QuackItem({ quack, currentUserId, currentUserRole }: QuackItemProps) {
   const { name, username } = quack.user
 
   const initials = name
@@ -37,7 +37,9 @@ export function QuackItem({ quack, currentUserId }: QuackItemProps) {
               Mood: {quackMoodLabels[quack.mood]}
             </span>
           ) : null}
-          {currentUserId === quack.userId ? <DeleteQuack id={quack.id} /> : null}
+          {currentUserId && (currentUserId === quack.userId || currentUserRole === "admin") ? (
+            <DeleteQuack id={quack.id} />
+          ) : null}
         </div>
         <p className="text-sm break-words whitespace-pre-line">{quack.text}</p>
         {quack.poll ? (

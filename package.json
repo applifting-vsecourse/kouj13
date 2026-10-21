@@ -15,9 +15,12 @@
     "format:root:check": "prettier \"**/*.{cjs,js,mjs,ts,json,md,yaml,yml}\" --check",
     "format:workspaces:write": "pnpm -r --stream --if-present run format:write",
     "format:workspaces:check": "pnpm -r --stream --if-present run format:check",
-    "prepare": "husky || true"
+    "prepare": "husky || true",
+    "test:e2e": "playwright test",
+    "test:e2e:api": "node --test scripts/moderation.e2e.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "dotenv-flow": "^4.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",

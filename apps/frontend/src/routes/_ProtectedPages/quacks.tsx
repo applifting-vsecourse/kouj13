@@ -32,6 +32,7 @@ function QuacksPage() {
 
         <QuackFeed
           currentUserId={user?.id}
+          currentUserRole={user?.role}
           onWriteFirst={() => textRef.current?.focus()}
           quacks={quacksQuery.data ?? []}
           isLoading={quacksQuery.isLoading}
