@@ -28,7 +28,7 @@ let serverQuacks: Quack[]
 let client: QueryClient
 const onWriteFirst = vi.fn()
 
-function Feed() {
+function Feed({ role = "user" }: { role?: string }) {
   const { data = [] } = useQuery({
     queryKey: quackKeys.lists(),
     queryFn: () => Promise.resolve(serverQuacks),
@@ -38,15 +38,16 @@ function Feed() {
     <QuackFeed
       quacks={data}
       currentUserId="u1"
+      currentUserRole={role}
       onWriteFirst={onWriteFirst}
     />
   )
 }
-function renderFeed() {
+function renderFeed(role = "user") {
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
-      <Feed />
+      <Feed role={role} />
     </QueryClientProvider>,
   )
 }
@@ -62,6 +63,22 @@ afterEach(() => {
 })
 
 describe("Own quacks", () => {
+  it("lets an admin confirm deletion of someone else's quack and refreshes the feed", async () => {
+    vi.mocked(deleteQuack).mockImplementation(() => {
+      serverQuacks = [mine]
+      return Promise.resolve()
+    })
+    renderFeed("admin")
+    const articles = screen.getAllByRole("article")
+    expect(screen.getAllByRole("button", { name: "Delete" })).toHaveLength(2)
+    await userEvent.click(within(articles[1]!).getByRole("button", { name: "Delete" }))
+    expect(screen.getByRole("dialog")).toHaveTextContent("permanently deletes this quack")
+    await userEvent.click(screen.getByRole("button", { name: "Delete quack" }))
+    await waitFor(() => expect(screen.queryByText(other.text)).not.toBeInTheDocument())
+    expect(deleteQuack).toHaveBeenCalledExactlyOnceWith("q2", expect.anything())
+    expect(screen.getByText(mine.text)).toBeInTheDocument()
+  })
+
   it("offers Delete only on own posts and switches between All and Mine", async () => {
     renderFeed()
     const articles = screen.getAllByRole("article")
@@ -129,7 +146,7 @@ describe("Own quacks", () => {
     expect(screen.getByRole("button", { name: "Deleting…" })).toBeDisabled()
     expect(screen.getByText(mine.text)).toBeInTheDocument()
     rejectDelete(new Error("Unavailable"))
-    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't delete your quack")
+    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't delete this quack")
     expect(screen.getByText(mine.text)).toBeInTheDocument()
     vi.mocked(deleteQuack).mockImplementation(() => {
       serverQuacks = [other]

@@ -57,6 +57,19 @@ pnpm backend seed                  # re-seed the database
 pnpm dev:down                      # stop the database container
 ```
 
+## Moderation review and E2E
+
+Admins can delete any quack; regular users can delete only their own. The service uses the authenticated session role. The existing confirmation and permanent deletion also apply to polls and votes. See [story.md](story.md).
+
+With the local seeded app running (`pnpm dev`) and Google Chrome installed:
+
+```shell
+pnpm test:e2e       # Playwright: three accounts, UI deletion, direct API denial, Swagger execution
+pnpm test:e2e:api   # API: authentication, role spoofing, poll deletion, missing posts, Swagger contract
+```
+
+Both tests create uniquely named posts and clean up only their own data. Playwright uses isolated browser contexts for the author, another regular user, and `admin@example.com`. Failed runs retain local traces under the gitignored `test-results/` directory. Override `E2E_FRONTEND_URL` and `E2E_API_URL` to test another explicitly seeded local environment.
+
 ## Deployment
 
 The whole app ships as one Docker Compose stack — Postgres, the backend, and the frontend (built to static files, served by nginx). See [`docker-compose.yml`](docker-compose.yml).

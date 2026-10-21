@@ -34,10 +34,10 @@ const mapPrismaQuackToDomain = (
 export class QuackRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async deleteQuack(id: string, userId: string): Promise<boolean> {
-    // Check ownership in the write itself so a direct API call cannot bypass it.
+  async deleteQuack(id: string, userId: string | undefined): Promise<boolean> {
+    // The service omits the author constraint only for an authenticated admin.
     const { count } = await this.prisma.quack.deleteMany({
-      where: { id, userId },
+      where: { id, ...(userId === undefined ? {} : { userId }) },
     });
     return count > 0;
   }

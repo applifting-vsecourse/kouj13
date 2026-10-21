@@ -8,7 +8,10 @@ export class QuacksService {
   constructor(private readonly quackRepository: QuackRepository) {}
 
   async deleteQuack(user: Identity, id: string): Promise<void> {
-    const deleted = await this.quackRepository.deleteQuack(id, user.id);
+    const deleted = await this.quackRepository.deleteQuack(
+      id,
+      user.role === 'admin' ? undefined : user.id,
+    );
     if (!deleted) {
       throw new NotFoundException('Quack not found or not yours');
     }

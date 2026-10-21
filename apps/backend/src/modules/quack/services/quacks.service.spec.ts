@@ -19,6 +19,27 @@ const aQuack = (overrides: Partial<Quack> = {}): Quack => ({
 });
 
 describe('QuacksService', () => {
+  it('allows an admin to delete regardless of author', async () => {
+    const repository = mock<QuackRepository>();
+    repository.deleteQuack.mockResolvedValue(true);
+    const service = new QuacksService(repository);
+    await expect(
+      service.deleteQuack({ id: 'admin', role: 'admin' } as Identity, 'q1'),
+    ).resolves.toBeUndefined();
+    expect(repository.deleteQuack).toHaveBeenCalledWith('q1', undefined);
+  });
+
+  it('returns 404 for an admin deleting a missing quack', async () => {
+    const repository = mock<QuackRepository>();
+    repository.deleteQuack.mockResolvedValue(false);
+    await expect(
+      new QuacksService(repository).deleteQuack(
+        { id: 'admin', role: 'admin' } as Identity,
+        'missing',
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
   it('deletes using the signed-in author identity', async () => {
     const repository = mock<QuackRepository>();
     repository.deleteQuack.mockResolvedValue(true);
