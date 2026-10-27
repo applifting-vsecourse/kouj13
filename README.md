@@ -1,4 +1,4 @@
-# Quacker — full-stack starter template
+# Kouj13 — full-stack starter template
 
 Starter template for [4IT580](https://4it580.vse.cz) team projects: a minimal, working full-stack app you fork and grow into your own product.
 
