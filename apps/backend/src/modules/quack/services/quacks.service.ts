@@ -1,7 +1,11 @@
 import { Quack, QuackMood } from '@/modules/quack/domain/quack';
 import { QuackRepository } from '@/modules/quack/repositories/quack.repository';
 import { Identity } from '@/shared/auth/domain/identity';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Injectable()
 export class QuacksService {
@@ -21,18 +25,33 @@ export class QuacksService {
     return this.quackRepository.getQuacks(user.id);
   }
 
+  async getReplies(id: string): Promise<Quack[]> {
+    const replies = await this.quackRepository.getReplies(id);
+    if (!replies) {
+      throw new NotFoundException('Quack not found');
+    }
+    return replies;
+  }
+
   async createQuack(
     user: Identity,
     quackData: {
       text: string;
       mood?: QuackMood | null;
       poll?: { options: string[] };
+      parentId?: string;
     },
   ): Promise<Quack> {
+    if (quackData.parentId !== undefined && quackData.poll) {
+      throw new BadRequestException('Replies cannot have a poll');
+    }
     return this.quackRepository.createQuack({
       text: quackData.text,
       mood: quackData.mood ?? null,
       ...(quackData.poll ? { poll: quackData.poll } : {}),
+      ...(quackData.parentId !== undefined
+        ? { parentId: quackData.parentId }
+        : {}),
       // the author is taken from the session, never from the request body
       userId: user.id,
     });

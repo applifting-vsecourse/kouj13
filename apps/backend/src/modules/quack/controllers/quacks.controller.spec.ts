@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common/constants';
 import { mock } from 'jest-mock-extended';
 import { CreateQuackDto } from './dto/create-quack.dto';
+import { QuackResponseDto } from './dto/quack.response.dto';
 import { QuacksController } from './quacks.controller';
 
 jest.mock('@/shared/auth/guards/authenticated-user.guard', () => ({
@@ -72,6 +73,8 @@ describe('Quack moods', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         user: { id: 'u1', name: 'Duck', username: 'duck' },
+        parentId: null,
+        deletedAt: null,
       };
       const repository = mock<QuackRepository>();
       repository.createQuack.mockResolvedValue(quack);
@@ -104,6 +107,91 @@ describe('Quack moods', () => {
     async (mood) => {
       await expect(
         validateBody({ text: 'hello', mood }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    },
+  );
+});
+
+describe('Replies and tombstones', () => {
+  const quack = (overrides: Partial<Quack> = {}): Quack => ({
+    id: 'q1',
+    text: 'secret original text',
+    mood: 'happy',
+    userId: 'u1',
+    createdAt: new Date('2026-01-01T12:00:00Z'),
+    updatedAt: new Date('2026-01-01T12:00:00Z'),
+    user: { id: 'u1', name: 'Duck', username: 'duck' },
+    parentId: null,
+    deletedAt: null,
+    ...overrides,
+  });
+
+  it('serves a tombstone without its content or author', () => {
+    const response = QuackResponseDto.fromDomain(
+      quack({ deletedAt: new Date(), replyCount: 2 }),
+    );
+    expect(response).toEqual({
+      id: 'q1',
+      createdAt: new Date('2026-01-01T12:00:00Z'),
+      parentId: null,
+      replyCount: 2,
+      text: '',
+      mood: null,
+      userId: null,
+      user: null,
+      poll: null,
+      deleted: true,
+    });
+    expect(JSON.stringify(response)).not.toMatch(/secret|Duck|u1/);
+  });
+
+  it('serves a live quack with its reply count', () => {
+    expect(QuackResponseDto.fromDomain(quack({ replyCount: 3 }))).toMatchObject(
+      {
+        text: 'secret original text',
+        deleted: false,
+        replyCount: 3,
+        user: { name: 'Duck' },
+      },
+    );
+  });
+
+  it('exposes GET /quacks/:id/replies and passes parentId from the body', async () => {
+    expect(
+      Reflect.getMetadata(PATH_METADATA, QuacksController.prototype.replies),
+    ).toBe(':id/replies');
+    expect(
+      Reflect.getMetadata(METHOD_METADATA, QuacksController.prototype.replies),
+    ).toBe(RequestMethod.GET);
+    const repository = mock<QuackRepository>();
+    repository.getReplies.mockResolvedValue([
+      quack({ id: 'r1', parentId: 'q1' }),
+    ]);
+    repository.createQuack.mockResolvedValue(
+      quack({ id: 'r2', parentId: 'q1' }),
+    );
+    const controller = new QuacksController(new QuacksService(repository));
+
+    await expect(controller.replies('q1')).resolves.toEqual([
+      expect.objectContaining({ id: 'r1', parentId: 'q1' }),
+    ]);
+    await controller.create(
+      { id: 'u2' } as Identity,
+      await validateBody({ text: 'reply', parentId: 'q1' }),
+    );
+    expect(repository.createQuack).toHaveBeenCalledWith({
+      text: 'reply',
+      mood: null,
+      parentId: 'q1',
+      userId: 'u2',
+    });
+  });
+
+  it.each(['', 1, null, {}])(
+    'rejects an invalid parentId (%j)',
+    async (parentId) => {
+      await expect(
+        validateBody({ text: 'reply', parentId }),
       ).rejects.toBeInstanceOf(BadRequestException);
     },
   );

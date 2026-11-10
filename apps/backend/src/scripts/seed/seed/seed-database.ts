@@ -1,5 +1,6 @@
 import { PrismaService } from '@/core/prisma/prisma.service';
 import { User } from '@/generated/prisma/client';
+import { Quack } from '@/modules/quack/domain/quack';
 import { BetterAuth } from '@/shared/auth/providers/better-auth.provider';
 import { Config } from '@/shared/config/config.service';
 import { createQuack } from './create-quack';
@@ -163,11 +164,53 @@ Please stop tagging me.`,
   ];
 
   const now = Date.now();
+  const created = new Map<string, Quack>();
 
   for (const { author, minutesAgo, text } of exampleQuacks) {
+    created.set(
+      text,
+      await createQuack(prisma, {
+        text,
+        userId: author.id,
+        createdAt: new Date(now - minutesAgo * MINUTE_IN_MS),
+      }),
+    );
+  }
+
+  console.log('Creating example replies');
+
+  // Each reply points at its parent by the parent's exact text above.
+  const exampleReplies: {
+    parent: string;
+    author: User;
+    minutesAgo: number;
+    text: string;
+  }[] = [
+    {
+      parent: exampleQuacks[10].text,
+      author: breadCritic,
+      minutesAgo: 80,
+      text: `Was the crumb any good though. Asking professionally.`,
+    },
+    {
+      parent: exampleQuacks[10].text,
+      author: pondAdmin,
+      minutesAgo: 60,
+      text: `You have started something. Please file the paperwork.`,
+    },
+    {
+      parent: exampleQuacks[4].text,
+      author: migrationSeason,
+      minutesAgo: 1400,
+      text: `Flew through it once. Very wet. Would not recommend.`,
+    },
+  ];
+
+  for (const { parent, author, minutesAgo, text } of exampleReplies) {
     await createQuack(prisma, {
       text,
       userId: author.id,
+      parentId: created.get(parent)!.id,
       createdAt: new Date(now - minutesAgo * MINUTE_IN_MS),
     });
   }

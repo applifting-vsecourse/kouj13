@@ -18,4 +18,8 @@ export type Quack = {
   updatedAt: Date;
   user?: QuackAuthor;
   poll?: Poll | null;
+  parentId: string | null;
+  // Set on tombstones: a deleted quack kept only because it has replies (ADR 0001).
+  deletedAt: Date | null;
+  replyCount?: number;
 };

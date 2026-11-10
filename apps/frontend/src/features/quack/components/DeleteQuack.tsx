@@ -39,7 +39,8 @@ export function DeleteQuack({ id }: { id: string }) {
         <DialogHeader>
           <DialogTitle>Delete this quack?</DialogTitle>
           <DialogDescription>
-            This permanently deletes this quack and any poll votes.
+            This permanently deletes the quack&apos;s text and any poll votes. Replies from other
+            people stay under it.
           </DialogDescription>
         </DialogHeader>
         {deletion.error ? (

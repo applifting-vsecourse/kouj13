@@ -69,9 +69,12 @@ type QuackFormProps = {
   className?: string
   defaultMood?: QuackMood | null
   textRef?: Ref<HTMLTextAreaElement>
+  // Turns the form into a reply box: no poll, reply wording.
+  parentId?: string
 }
 
-export function QuackForm({ className, defaultMood = null, textRef }: QuackFormProps) {
+export function QuackForm({ className, defaultMood = null, textRef, parentId }: QuackFormProps) {
+  const isReply = parentId !== undefined
   const addQuack = useAddQuack()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -96,6 +99,7 @@ export function QuackForm({ className, defaultMood = null, textRef }: QuackFormP
         ...(values.options.length
           ? { poll: { options: values.options.map((option) => option.label) } }
           : {}),
+        ...(isReply ? { parentId } : {}),
       },
       { onSuccess: () => form.reset({ text: "", mood: defaultMood ?? "", options: [] }) },
     )
@@ -120,11 +124,11 @@ export function QuackForm({ className, defaultMood = null, textRef }: QuackFormP
             name="text"
             render={({ field }) => (
               <FormItem className="min-w-0 flex-1 basis-64">
-                <FormLabel>New quack</FormLabel>
+                <FormLabel>{isReply ? "Your reply" : "New quack"}</FormLabel>
                 <FormControl>
                   <Textarea
-                    rows={3}
-                    placeholder="Quack something..."
+                    rows={isReply ? 2 : 3}
+                    placeholder={isReply ? "Quack back..." : "Quack something..."}
                     disabled={addQuack.isPending}
                     {...field}
                     ref={(element) => {
@@ -166,7 +170,7 @@ export function QuackForm({ className, defaultMood = null, textRef }: QuackFormP
           />
         </div>
 
-        {answers.fields.length ? (
+        {isReply ? null : answers.fields.length ? (
           <fieldset
             disabled={addQuack.isPending}
             className="space-y-3 border-t border-border pt-4"
@@ -249,7 +253,13 @@ export function QuackForm({ className, defaultMood = null, textRef }: QuackFormP
             disabled={addQuack.isPending}
           >
             {addQuack.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            {addQuack.isPending ? "Posting…" : "Quack"}
+            {addQuack.isPending
+              ? isReply
+                ? "Replying…"
+                : "Posting…"
+              : isReply
+                ? "Reply"
+                : "Quack"}
           </Button>
         </div>
       </form>

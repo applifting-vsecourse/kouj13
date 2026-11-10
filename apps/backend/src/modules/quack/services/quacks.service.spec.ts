@@ -3,7 +3,7 @@
 import { Quack } from '@/modules/quack/domain/quack';
 import { QuackRepository } from '@/modules/quack/repositories/quack.repository';
 import { Identity } from '@/shared/auth/domain/identity';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { mock } from 'jest-mock-extended';
 import { QuacksService } from './quacks.service';
 
@@ -15,6 +15,8 @@ const aQuack = (overrides: Partial<Quack> = {}): Quack => ({
   createdAt: new Date('2026-01-01T12:00:00Z'),
   updatedAt: new Date('2026-01-01T12:00:00Z'),
   user: { id: 'u1', name: 'Caffeinated Duck', username: 'CaffeinatedDuck' },
+  parentId: null,
+  deletedAt: null,
   ...overrides,
 });
 
@@ -91,5 +93,48 @@ describe('QuacksService', () => {
       mood: null,
       userId: 'u1',
     });
+  });
+
+  it('creates a reply owned by the signed-in user under the given parent', async () => {
+    const repository = mock<QuackRepository>();
+    repository.createQuack.mockResolvedValue(aQuack({ parentId: 'q1' }));
+
+    await new QuacksService(repository).createQuack({ id: 'u2' } as Identity, {
+      text: 'reply',
+      parentId: 'q1',
+    });
+
+    expect(repository.createQuack).toHaveBeenCalledWith({
+      text: 'reply',
+      mood: null,
+      parentId: 'q1',
+      userId: 'u2',
+    });
+  });
+
+  it('rejects a reply with a poll before touching storage', async () => {
+    const repository = mock<QuackRepository>();
+
+    await expect(
+      new QuacksService(repository).createQuack({ id: 'u1' } as Identity, {
+        text: 'reply',
+        parentId: 'q1',
+        poll: { options: ['A', 'B'] },
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(repository.createQuack).not.toHaveBeenCalled();
+  });
+
+  it('returns replies and 404s for a quack that does not exist', async () => {
+    const repository = mock<QuackRepository>();
+    const replies = [aQuack({ id: 'r1', parentId: 'q1' })];
+    repository.getReplies.mockResolvedValueOnce(replies);
+    repository.getReplies.mockResolvedValueOnce(null);
+    const service = new QuacksService(repository);
+
+    await expect(service.getReplies('q1')).resolves.toEqual(replies);
+    await expect(service.getReplies('missing')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });

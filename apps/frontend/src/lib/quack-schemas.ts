@@ -45,14 +45,19 @@ export const pollSchema = z
   })
 export type Poll = z.infer<typeof pollSchema>
 
+// A deleted quack that still has replies comes back as a tombstone (ADR 0001):
+// deleted: true, empty text, and no author.
 export const quackSchema = z.object({
   id: z.string(),
   text: z.string(),
   mood: quackMoodSchema.nullish(),
-  userId: z.string(),
+  userId: z.string().nullable(),
   createdAt: z.coerce.date(),
-  user: quackUserSchema,
+  user: quackUserSchema.nullable(),
   poll: pollSchema.nullable().optional(),
+  parentId: z.string().nullish(),
+  deleted: z.boolean().optional(),
+  replyCount: z.number().int().nonnegative().optional(),
 })
 
 export const quacksSchema = z.array(quackSchema)

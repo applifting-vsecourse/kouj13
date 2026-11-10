@@ -6,6 +6,7 @@ export async function addQuack(input: {
   text: string
   mood?: QuackMood
   poll?: { options: string[] }
+  parentId?: string
 }): Promise<Quack> {
   const json = await api.post("quacks", { json: input }).json()
   return quackSchema.parse(json)

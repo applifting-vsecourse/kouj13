@@ -23,7 +23,7 @@ export function useUpdateProfile() {
       )
       queryClient.setQueriesData<Quack[]>({ queryKey: quackKeys.all() }, (quacks) =>
         quacks?.map((quack) =>
-          quack.userId === profile.id
+          quack.user && quack.userId === profile.id
             ? { ...quack, user: { ...quack.user, name: profile.name, username: profile.username } }
             : quack,
         ),
