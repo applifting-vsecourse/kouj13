@@ -3,7 +3,7 @@ import { Loader2, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 
-import type { Quack } from "@/features/quack/api/quackSchemas"
+import type { Quack, QuackMood } from "@/features/quack/api/quackSchemas"
 import { QuackItem } from "@/features/quack/components/QuackItem"
 
 type QuackListProps = {
@@ -14,6 +14,7 @@ type QuackListProps = {
   emptyMessage?: string
   currentUserId?: string
   currentUserRole?: string
+  defaultMood?: QuackMood | null
   onWriteFirst?: () => void
 }
 
@@ -25,6 +26,7 @@ export function QuackList({
   emptyMessage = "No quacks yet",
   currentUserId,
   currentUserRole,
+  defaultMood,
   onWriteFirst,
 }: QuackListProps) {
   return (
@@ -84,6 +86,7 @@ export function QuackList({
           quack={quack}
           currentUserId={currentUserId}
           currentUserRole={currentUserRole}
+          defaultMood={defaultMood}
         />
       ))}
     </div>

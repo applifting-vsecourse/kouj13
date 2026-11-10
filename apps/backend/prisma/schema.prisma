@@ -41,7 +41,18 @@ model Quack {
   updatedAt DateTime   @default(now()) @updatedAt
   poll      Poll?
 
+  // Replies are one level deep (only top-level quacks accept a reply). RESTRICT
+  // keeps the database from hard-deleting a quack that still has replies — ADR 0001.
+  parentId  String?
+  parent    Quack?     @relation("QuackReplies", fields: [parentId], references: [id], onDelete: Restrict)
+  replies   Quack[]    @relation("QuackReplies")
+
+  // Set when a quack with replies is deleted: it becomes a tombstone whose
+  // text and mood are wiped and whose poll is removed — ADR 0001.
+  deletedAt DateTime?
+
   @@index([userId])
+  @@index([parentId, createdAt])
   @@map("quack")
 }
 

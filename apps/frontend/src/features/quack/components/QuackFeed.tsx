@@ -25,7 +25,7 @@ export function QuackFeed({ quacks, currentUserId, onWriteFirst, ...listProps }:
     ? scopedQuacks.filter(
         (quack) =>
           quack.text.toLowerCase().includes(search) ||
-          quack.user.name.toLowerCase().includes(search),
+          quack.user?.name.toLowerCase().includes(search),
       )
     : scopedQuacks
 

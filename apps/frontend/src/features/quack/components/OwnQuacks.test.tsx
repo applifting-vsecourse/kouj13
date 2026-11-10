@@ -72,7 +72,7 @@ describe("Own quacks", () => {
     const articles = screen.getAllByRole("article")
     expect(screen.getAllByRole("button", { name: "Delete" })).toHaveLength(2)
     await userEvent.click(within(articles[1]!).getByRole("button", { name: "Delete" }))
-    expect(screen.getByRole("dialog")).toHaveTextContent("permanently deletes this quack")
+    expect(screen.getByRole("dialog")).toHaveTextContent("permanently deletes the quack's text")
     await userEvent.click(screen.getByRole("button", { name: "Delete quack" }))
     await waitFor(() => expect(screen.queryByText(other.text)).not.toBeInTheDocument())
     expect(deleteQuack).toHaveBeenCalledExactlyOnceWith("q2", expect.anything())
