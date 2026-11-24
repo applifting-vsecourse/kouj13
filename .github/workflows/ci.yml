@@ -131,6 +131,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
+          package-manager-cache: false
       - name: Reject removed or rewritten test lines
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
