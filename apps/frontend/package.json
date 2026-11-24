@@ -13,7 +13,8 @@
     "format:check": "prettier --check './src/**/*.{ts,tsx,css,js,cjs,mjs,json}'",
     "format:write": "prettier --write './src/**/*.{ts,tsx,css,js,cjs,mjs,json}'",
     "lint:check": "eslint './src/**/*.{ts,tsx,js,cjs,mjs}'",
-    "lint:fix": "eslint --fix './src/**/*.{ts,tsx,js,cjs,mjs}'"
+    "lint:fix": "eslint --fix './src/**/*.{ts,tsx,js,cjs,mjs}'",
+    "e2e": "pnpm -w test:e2e"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
