@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/date"
 
 import { quackMoodLabels, type Quack, type QuackMood } from "@/features/quack/api/quackSchemas"
 import { DeleteQuack } from "@/features/quack/components/DeleteQuack"
+import { LikeQuack } from "@/features/quack/components/LikeQuack"
 import { PollVote } from "@/features/quack/components/PollVote"
 import { QuackReplies } from "@/features/quack/components/QuackReplies"
 import { UsersName } from "@/features/quack/components/UsersName"
@@ -70,6 +71,8 @@ export function QuackItem({ quack, currentUserId, currentUserRole, defaultMood }
             ) : null}
           </>
         )}
+
+        {!quack.deleted && currentUserId ? <LikeQuack quack={quack} /> : null}
 
         {canOpenReplies && !(quack.deleted && replyCount === 0) ? (
           <div>

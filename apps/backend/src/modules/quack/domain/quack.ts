@@ -22,4 +22,6 @@ export type Quack = {
   // Set on tombstones: a deleted quack kept only because it has replies (ADR 0001).
   deletedAt: Date | null;
   replyCount?: number;
+  likeCount?: number;
+  likedByMe?: boolean;
 };

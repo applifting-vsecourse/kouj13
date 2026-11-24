@@ -25,8 +25,8 @@ export class QuacksService {
     return this.quackRepository.getQuacks(user.id);
   }
 
-  async getReplies(id: string): Promise<Quack[]> {
-    const replies = await this.quackRepository.getReplies(id);
+  async getReplies(id: string, user?: Identity): Promise<Quack[]> {
+    const replies = await this.quackRepository.getReplies(id, user?.id);
     if (!replies) {
       throw new NotFoundException('Quack not found');
     }
