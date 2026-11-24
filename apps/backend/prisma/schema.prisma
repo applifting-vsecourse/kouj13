@@ -39,6 +39,7 @@ model Quack {
   userId    String
   createdAt DateTime   @default(now())
   updatedAt DateTime   @default(now()) @updatedAt
+  likes     Like[]
   poll      Poll?
 
   // Replies are one level deep (only top-level quacks accept a reply). RESTRICT
@@ -116,6 +117,7 @@ model User {
   accounts        Account[]
   quacks          Quack[]
   pollVotes       PollVote[]
+  likes           Like[]
   role            UserRole  @default(user)
 
   username        String? @db.VarChar(50)
@@ -162,4 +164,16 @@ model PollVote {
   @@id([pollId, userId])
   @@index([pollId, optionId])
   @@map("poll_vote")
+}
+
+model Like {
+  quackId   String
+  userId    String
+  createdAt DateTime @default(now())
+  quack     Quack    @relation(fields: [quackId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([quackId, userId])
+  @@index([userId])
+  @@map("like")
 }

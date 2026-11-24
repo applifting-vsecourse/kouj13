@@ -7,6 +7,7 @@ import {
 import { readPolls } from '@/modules/poll/repositories/poll.repository';
 import { Quack, QuackMood } from '@/modules/quack/domain/quack';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { readLikes } from './likes.repository';
 
 const mapPrismaQuackToDomain = (
   quack: PrismaQuack & { user?: PrismaUser; _count?: { replies: number } },
@@ -60,6 +61,7 @@ export class QuackRepository {
         return true;
       }
 
+      await tx.like.deleteMany({ where: { quackId: id } });
       await tx.poll.deleteMany({ where: { quackId: id } });
       await tx.quack.update({
         where: { id },
@@ -90,7 +92,17 @@ export class QuackRepository {
           quacks.flatMap((quack) => (quack.poll ? [quack.poll.id] : [])),
           userId,
         );
+        const likes = new Map(
+          (
+            await readLikes(
+              tx,
+              quacks.map((q) => q.id),
+              userId,
+            )
+          ).map((state) => [state.quackId, state]),
+        );
         return quacks.map((quack) => ({
+          ...likes.get(quack.id),
           ...mapPrismaQuackToDomain(quack),
           poll: polls.find((poll) => poll.id === quack.poll?.id) ?? null,
         }));
@@ -100,7 +112,7 @@ export class QuackRepository {
   }
 
   /** Replies to a top-level quack, oldest first, or null when it doesn't exist. */
-  async getReplies(parentId: string): Promise<Quack[] | null> {
+  async getReplies(parentId: string, userId = ''): Promise<Quack[] | null> {
     return this.prisma.$transaction(
       async (tx) => {
         const parent = await tx.quack.findFirst({
@@ -113,7 +125,17 @@ export class QuackRepository {
           include: { user: true, _count: { select: { replies: true } } },
           orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         });
+        const likes = new Map(
+          (
+            await readLikes(
+              tx,
+              replies.map((q) => q.id),
+              userId,
+            )
+          ).map((state) => [state.quackId, state]),
+        );
         return replies.map((reply) => ({
+          ...likes.get(reply.id),
           ...mapPrismaQuackToDomain(reply),
           poll: null,
         }));
@@ -173,6 +195,8 @@ export class QuackRepository {
       return {
         ...mapPrismaQuackToDomain(quack),
         replyCount: 0,
+        likeCount: 0,
+        likedByMe: false,
         poll: poll ?? null,
       };
     });

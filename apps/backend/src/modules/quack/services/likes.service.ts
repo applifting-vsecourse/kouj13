@@ -1,7 +1,7 @@
 import { LikeState, QuackLikeState } from '@/modules/quack/domain/like';
 import { LikesRepository } from '@/modules/quack/repositories/likes.repository';
 import { Identity } from '@/shared/auth/domain/identity';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class LikesService {
@@ -12,15 +12,16 @@ export class LikesService {
     quackId: string,
     liked: boolean,
   ): Promise<LikeState> {
-    void user;
-    void quackId;
-    void liked;
-    throw new Error('not implemented');
+    const state = await this.repository.setLike({
+      quackId,
+      userId: user.id,
+      liked,
+    });
+    if (!state) throw new NotFoundException('Quack not found');
+    return state;
   }
 
   async read(user: Identity, quackIds: string[]): Promise<QuackLikeState[]> {
-    void user;
-    void quackIds;
-    throw new Error('not implemented');
+    return this.repository.read({ quackIds, userId: user.id });
   }
 }

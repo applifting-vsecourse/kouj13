@@ -55,12 +55,24 @@ export class QuackResponseDto {
   @ApiProperty()
   replyCount!: number;
 
+  @ApiProperty()
+  likeCount?: number;
+
+  @ApiProperty()
+  likedByMe?: boolean;
+
   static fromDomain(quack: Quack): QuackResponseDto {
     const common = {
       id: quack.id,
       createdAt: quack.createdAt,
       parentId: quack.parentId,
       replyCount: quack.replyCount ?? 0,
+      ...(quack.likeCount !== undefined
+        ? {
+            likeCount: quack.deletedAt ? 0 : quack.likeCount,
+            likedByMe: quack.deletedAt ? false : quack.likedByMe,
+          }
+        : {}),
     };
     // Tombstones expose nothing about the deleted post or its author.
     if (quack.deletedAt) {
