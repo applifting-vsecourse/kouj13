@@ -16,7 +16,8 @@ export default defineConfig({
   webServer: process.env.CI
     ? [
         {
-          command: 'pnpm backend start:prod',
+          command: 'node apps/backend/dist/main.js',
+          env: { NODE_ENV: 'test' },
           url: 'http://localhost:4050/api/docs',
           reuseExistingServer: false,
           timeout: 60_000,
