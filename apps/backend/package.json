@@ -36,7 +36,8 @@
     "auth:generate": "npx @better-auth/cli generate --config ./src/shared/auth/utils/cli-auth-client.ts",
     "db:reset": "prisma migrate reset --force",
     "email:dev": "email dev --dir ./src/core/email/templates",
-    "email:export": "email export --dir ./src/core/email/templates"
+    "email:export": "email export --dir ./src/core/email/templates",
+    "test:int": "cd ../.. && node scripts/test-integration.mjs"
   },
   "dependencies": {
     "@applifting-io/nestjs-decorated-config": "^1.0.8",
@@ -75,6 +76,7 @@
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@types/supertest": "^7.2.1",
     "eslint": "catalog:lint",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
@@ -82,6 +84,7 @@
     "jest": "^30.4.2",
     "jest-mock-extended": "^4.0.1",
     "prettier": "catalog:",
+    "supertest": "^7.3.2",
     "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
